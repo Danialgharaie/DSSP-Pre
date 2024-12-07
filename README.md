@@ -24,7 +24,7 @@ make
 
 This will produce an executable named `process_pdb`.
 
-### Makefile Flags
+### makefile Flags
 
 - **-O3:** High-level optimization for speed.
 - **-flto:** Link-time optimization.
@@ -50,7 +50,7 @@ your-repo/
     └── process_pdb.c
 ```
 
-- **Makefile:** Builds the `process_pdb` executable.
+- **makefile:** Builds the `process_pdb` executable.
 - **README.md:** Instructions and usage details.
 - **include/process_pdb.h:** Declarations of functions and constants.
 - **src/process_pdb.c:** Implementation of the logic to process the PDB file.
