@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -O2 -Iinclude
+CFLAGS = -Wall -Wextra -O3 -flto -march=native -Iinclude
 TARGET = process_pdb
 SRC = src/process_pdb.c
 
