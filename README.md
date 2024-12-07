@@ -41,7 +41,7 @@ The tool will process the specified PDB file in place, ensuring all required rec
 ## Project Structure
 
 ```
-your-repo/
+DSSP-Pre/
 ├── makefile
 ├── README.md
 ├── include/
