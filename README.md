@@ -58,4 +58,4 @@ your-repo/
 ## Notes
 
 - It’s recommended to keep a backup of your original PDB file before running the tool, as it overwrites the input file.
-- Adjust compilation flags in the `Makefile` if you need different optimization settings or broader compatibility.
+- Adjust compilation flags in the `makefile` if you need different optimization settings or broader compatibility.
