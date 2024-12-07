@@ -42,7 +42,7 @@ The tool will process the specified PDB file in place, ensuring all required rec
 
 ```
 your-repo/
-├── Makefile
+├── makefile
 ├── README.md
 ├── include/
 │   └── process_pdb.h
