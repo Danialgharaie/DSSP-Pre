@@ -18,7 +18,7 @@ This tool processes a PDB file to ensure that certain records (`HEADER`, `CRYST1
 
 Run `make` in the project directory:
 
-```bash
+```sh
 make
 ```
 
@@ -32,7 +32,7 @@ This will produce an executable named `process_pdb`.
 
 ## Usage
 
-```bash
+```sh
 ./process_pdb path_to_pdb_file
 ```
 
