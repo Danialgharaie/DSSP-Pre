@@ -62,4 +62,4 @@ DSSP-Pre/
 
 ## To-Do
 
--[ ] Add support for bulk processing of multiple PDB files.
+- [ ] Add support for bulk processing of multiple PDB files.
