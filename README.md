@@ -59,3 +59,7 @@ DSSP-Pre/
 
 - It’s recommended to keep a backup of your original PDB file before running the tool, as it overwrites the input file.
 - Adjust compilation flags in the `makefile` if you need different optimization settings or broader compatibility.
+
+## To-Do
+
+-[ ] Add support for bulk processing of multiple PDB files.
