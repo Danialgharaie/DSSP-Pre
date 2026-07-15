@@ -196,6 +196,11 @@ bool insert_cryst1(char **lines, int *nlines) {
 }
 
 bool process_file(const char *input_path, const char *output_dir) {
+    if (strlen(input_path) >= PATH_MAX) {
+        fprintf(stderr, "Error: Input path too long: %s\n", input_path);
+        return false;
+    }
+
     FILE *fp = fopen(input_path, "r");
     if (!fp) {
         perror(input_path);
