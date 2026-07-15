@@ -3,6 +3,9 @@
 #include <string.h>
 #include <stdbool.h>
 #include <libgen.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <errno.h>
 #include "process_pdb.h"
 
 // Default PDB records - must maintain exact spacing
@@ -240,9 +243,27 @@ int main(int argc, char **argv) {
         return 1;
     }
     
-    // Temporary check to compile and verify parsing
-    (void)input_files;
-    printf("Output dir: %s, File count: %d\n", output_dir ? output_dir : "None", num_files);
-    return 0;
+    if (output_dir != NULL) {
+        struct stat st = {0};
+        if (stat(output_dir, &st) == -1) {
+            if (mkdir(output_dir, 0777) == -1) {
+                fprintf(stderr, "Error creating output directory %s: %s\n", output_dir, strerror(errno));
+                return 1;
+            }
+        } else if (!S_ISDIR(st.st_mode)) {
+            fprintf(stderr, "Error: %s exists but is not a directory\n", output_dir);
+            return 1;
+        }
+    }
+
+    bool overall_success = true;
+    for (int i = 0; i < num_files; i++) {
+        if (!process_file(input_files[i], output_dir)) {
+            fprintf(stderr, "Failed to process: %s\n", input_files[i]);
+            overall_success = false;
+        }
+    }
+
+    return overall_success ? 0 : 1;
 }
 
