@@ -30,12 +30,13 @@ bool line_equals_trimmed(const char *line, const char *ref) {
     while (len > 0 && (line[len-1] == '\n' || line[len-1] == '\r' || line[len-1] == ' ')) {
         len--;
     }
+    if (len >= MAX_LINE_LEN) return false;
     strncpy(temp, line, len);
     temp[len] = '\0';
     return strcmp(temp, ref) == 0;
 }
 
-void fix_header_and_model(char **lines, int *nlines) {
+bool fix_header_and_model(char **lines, int *nlines) {
     bool has_header = false;
     for (int i = 0; i < *nlines; i++) {
         if (starts_with(lines[i], "HEADER")) {
@@ -46,8 +47,13 @@ void fix_header_and_model(char **lines, int *nlines) {
 
     // Insert HEADER if not present
     if (!has_header && *nlines < MAX_LINES) {
+        char *dup = strdup(default_header);
+        if (!dup) {
+            fprintf(stderr, "Error: Out of memory\n");
+            return false;
+        }
         memmove(lines + 1, lines, sizeof(char*) * (*nlines));
-        lines[0] = strdup(default_header);
+        lines[0] = dup;
         (*nlines)++;
     }
 
@@ -71,13 +77,22 @@ void fix_header_and_model(char **lines, int *nlines) {
         }
 
         if (atom_index != -1 && *nlines + 1 < MAX_LINES) {
-            memmove(lines + atom_index + 1, lines + atom_index, sizeof(char*) * (*nlines - atom_index));
-            lines[atom_index] = strdup(default_model);
-            (*nlines)++;
-            if (*nlines < MAX_LINES) {
-                lines[*nlines] = strdup(default_endmdl);
-                (*nlines)++;
+            char *dup_model = strdup(default_model);
+            if (!dup_model) {
+                fprintf(stderr, "Error: Out of memory\n");
+                return false;
             }
+            char *dup_endmdl = strdup(default_endmdl);
+            if (!dup_endmdl) {
+                free(dup_model);
+                fprintf(stderr, "Error: Out of memory\n");
+                return false;
+            }
+            memmove(lines + atom_index + 1, lines + atom_index, sizeof(char*) * (*nlines - atom_index));
+            lines[atom_index] = dup_model;
+            (*nlines)++;
+            lines[*nlines] = dup_endmdl;
+            (*nlines)++;
         }
     }
 
@@ -101,7 +116,12 @@ void fix_header_and_model(char **lines, int *nlines) {
     // If no END, append it
     if (!has_end) {
         if (*nlines < MAX_LINES) {
-            lines[*nlines] = strdup(default_end);
+            char *dup = strdup(default_end);
+            if (!dup) {
+                fprintf(stderr, "Error: Out of memory\n");
+                return false;
+            }
+            lines[*nlines] = dup;
             (*nlines)++;
             has_end = true;
             end_index = (*nlines) - 1;
@@ -111,8 +131,13 @@ void fix_header_and_model(char **lines, int *nlines) {
     if (!has_endmdl) {
         // Insert ENDMDL before END if END exists
         if (has_end && end_index != -1 && *nlines < MAX_LINES) {
+            char *dup = strdup(default_endmdl);
+            if (!dup) {
+                fprintf(stderr, "Error: Out of memory\n");
+                return false;
+            }
             memmove(lines + end_index + 1, lines + end_index, sizeof(char*) * (*nlines - end_index));
-            lines[end_index] = strdup(default_endmdl);
+            lines[end_index] = dup;
             (*nlines)++;
             // Re-locate END
             for (int i = 0; i < *nlines; i++) {
@@ -135,9 +160,10 @@ void fix_header_and_model(char **lines, int *nlines) {
             }
         }
     }
+    return true;
 }
 
-void insert_cryst1(char **lines, int *nlines) {
+bool insert_cryst1(char **lines, int *nlines) {
     bool has_cryst1 = false;
     for (int i = 0; i < *nlines; i++) {
         if (starts_with(lines[i], "CRYST1")) {
@@ -156,11 +182,17 @@ void insert_cryst1(char **lines, int *nlines) {
         }
 
         if (model_index != -1 && *nlines < MAX_LINES) {
+            char *dup = strdup(default_cryst1);
+            if (!dup) {
+                fprintf(stderr, "Error: Out of memory\n");
+                return false;
+            }
             memmove(lines + model_index + 1, lines + model_index, sizeof(char*) * (*nlines - model_index));
-            lines[model_index] = strdup(default_cryst1);
+            lines[model_index] = dup;
             (*nlines)++;
         }
     }
+    return true;
 }
 
 bool process_file(const char *input_path, const char *output_dir) {
@@ -192,8 +224,10 @@ bool process_file(const char *input_path, const char *output_dir) {
     }
     fclose(fp);
 
-    fix_header_and_model(lines, &nlines);
-    insert_cryst1(lines, &nlines);
+    if (!fix_header_and_model(lines, &nlines) || !insert_cryst1(lines, &nlines)) {
+        for (int i = 0; i < nlines; i++) free(lines[i]);
+        return false;
+    }
 
     char output_path[PATH_MAX];
     if (output_dir == NULL) {
@@ -205,7 +239,12 @@ bool process_file(const char *input_path, const char *output_dir) {
         strncpy(temp_path, input_path, sizeof(temp_path) - 1);
         temp_path[sizeof(temp_path) - 1] = '\0';
         char *base = basename(temp_path);
-        snprintf(output_path, sizeof(output_path), "%s/%s", output_dir, base);
+        int written = snprintf(output_path, sizeof(output_path), "%s/%s", output_dir, base);
+        if (written < 0 || (size_t)written >= sizeof(output_path)) {
+            fprintf(stderr, "Error: Output path too long or invalid\n");
+            for (int i = 0; i < nlines; i++) free(lines[i]);
+            return false;
+        }
     }
 
     fp = fopen(output_path, "w");

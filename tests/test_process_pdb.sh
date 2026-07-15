@@ -3,6 +3,9 @@ set -e
 
 cd "$(dirname "$0")/.."
 
+# Ensure cleanup on exit
+trap 'rm -rf tests/run_out tests/tmp_inplace' EXIT
+
 # Setup clean test environment
 rm -rf tests/run_out tests/tmp_inplace
 mkdir -p tests/tmp_inplace

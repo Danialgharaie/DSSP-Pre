@@ -9,8 +9,8 @@
 
 bool starts_with(const char *line, const char *prefix);
 bool line_equals_trimmed(const char *line, const char *ref);
-void fix_header_and_model(char **lines, int *nlines);
-void insert_cryst1(char **lines, int *nlines);
+bool fix_header_and_model(char **lines, int *nlines);
+bool insert_cryst1(char **lines, int *nlines);
 bool process_file(const char *input_path, const char *output_dir);
 
 #endif // PROCESS_PDB_H
