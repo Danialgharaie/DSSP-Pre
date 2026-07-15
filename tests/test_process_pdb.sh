@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+cd "$(dirname "$0")/.."
+
 # Setup clean test environment
 rm -rf tests/run_out tests/tmp_inplace
 mkdir -p tests/tmp_inplace
@@ -55,3 +57,6 @@ fi
 echo "PASS: Test 4"
 
 echo "All tests passed successfully!"
+
+# Cleanup
+rm -rf tests/run_out tests/tmp_inplace

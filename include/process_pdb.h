@@ -5,6 +5,7 @@
 
 #define MAX_LINES 10000
 #define MAX_LINE_LEN 256
+#define MAX_FILES 10000
 
 bool starts_with(const char *line, const char *prefix);
 bool line_equals_trimmed(const char *line, const char *ref);

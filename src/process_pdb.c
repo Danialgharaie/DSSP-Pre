@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <errno.h>
+#include <limits.h>
 #include "process_pdb.h"
 
 // Default PDB records - must maintain exact spacing
@@ -180,20 +181,27 @@ bool process_file(const char *input_path, const char *output_dir) {
             for (int i = 0; i < nlines; i++) free(lines[i]);
             return false;
         }
-        lines[nlines++] = strdup(buffer);
+        char *dup = strdup(buffer);
+        if (!dup) {
+            fprintf(stderr, "Error: Out of memory\n");
+            fclose(fp);
+            for (int i = 0; i < nlines; i++) free(lines[i]);
+            return false;
+        }
+        lines[nlines++] = dup;
     }
     fclose(fp);
 
     fix_header_and_model(lines, &nlines);
     insert_cryst1(lines, &nlines);
 
-    char output_path[MAX_LINE_LEN * 2];
+    char output_path[PATH_MAX];
     if (output_dir == NULL) {
         strncpy(output_path, input_path, sizeof(output_path) - 1);
         output_path[sizeof(output_path) - 1] = '\0';
     } else {
         // Extract basename securely
-        char temp_path[MAX_LINE_LEN];
+        char temp_path[PATH_MAX];
         strncpy(temp_path, input_path, sizeof(temp_path) - 1);
         temp_path[sizeof(temp_path) - 1] = '\0';
         char *base = basename(temp_path);
@@ -217,7 +225,7 @@ bool process_file(const char *input_path, const char *output_dir) {
 
 int main(int argc, char **argv) {
     const char *output_dir = NULL;
-    const char *input_files[MAX_LINES];
+    const char *input_files[MAX_FILES];
     int num_files = 0;
 
     for (int i = 1; i < argc; i++) {
@@ -230,7 +238,7 @@ int main(int argc, char **argv) {
                 return 1;
             }
         } else {
-            if (num_files >= MAX_LINES) {
+            if (num_files >= MAX_FILES) {
                 fprintf(stderr, "Error: Too many input files\n");
                 return 1;
             }
