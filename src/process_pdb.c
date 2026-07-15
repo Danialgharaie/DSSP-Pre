@@ -159,54 +159,36 @@ void insert_cryst1(char **lines, int *nlines) {
 }
 
 int main(int argc, char **argv) {
-    if (argc != 2) {
-        fprintf(stderr, "Usage: %s <pdb_file_path>\n", argv[0]);
-        return 1;
-    }
+    const char *output_dir = NULL;
+    const char *input_files[MAX_LINES];
+    int num_files = 0;
 
-    const char *file_path = argv[1];
-    FILE *fp = fopen(file_path, "r");
-    if (!fp) {
-        perror("Failed to open file");
-        return 1;
-    }
-
-    char *lines[MAX_LINES];
-    int nlines = 0;
-    char buffer[MAX_LINE_LEN];
-
-    while (fgets(buffer, sizeof(buffer), fp)) {
-        if (nlines >= MAX_LINES) {
-            fprintf(stderr, "File too large to process\n");
-            fclose(fp);
-            return 1;
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "-o") == 0) {
+            if (i + 1 < argc) {
+                output_dir = argv[i+1];
+                i++;
+            } else {
+                fprintf(stderr, "Error: -o option requires an argument\n");
+                return 1;
+            }
+        } else {
+            if (num_files >= MAX_LINES) {
+                fprintf(stderr, "Error: Too many input files\n");
+                return 1;
+            }
+            input_files[num_files++] = argv[i];
         }
-        lines[nlines] = strdup(buffer);
-        nlines++;
     }
-    fclose(fp);
 
-    // Process lines
-    fix_header_and_model(lines, &nlines);
-    insert_cryst1(lines, &nlines);
-
-    // Write back to file
-    fp = fopen(file_path, "w");
-    if (!fp) {
-        perror("Failed to open file for writing");
-        for (int i = 0; i < nlines; i++) {
-            free(lines[i]);
-        }
+    if (num_files == 0) {
+        fprintf(stderr, "Usage: %s [-o <output_dir>] <pdb_file_1> [<pdb_file_2> ...]\n", argv[0]);
         return 1;
     }
-
-    for (int i = 0; i < nlines; i++) {
-        fputs(lines[i], fp);
-        free(lines[i]);
-    }
-
-    fclose(fp);
-
+    
+    // Temporary check to compile and verify parsing
+    (void)input_files;
+    printf("Output dir: %s, File count: %d\n", output_dir ? output_dir : "None", num_files);
     return 0;
 }
 
