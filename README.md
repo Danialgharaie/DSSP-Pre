@@ -67,14 +67,18 @@ The tool processes one or more specified PDB files. By default, it processes the
   ```sh
   ./process_pdb -o processed_files file1.pdb path/to/file2.pdb
   ```
+- **Combine wildcard and output directory**:
+  ```sh
+  ./process_pdb -o output_dir *.pdb
+  ```
 
-### Exit Status
+### Exit Status and Error Handling
 
 The tool returns the following exit codes:
 - **`0`**: All files were processed successfully.
 - **`1`**: One or more errors occurred (e.g., file not found, directory creation failed, invalid argument, or input file exceeded size limits).
 
-The tool continues processing subsequent files in the list even if a prior file fails to process.
+All errors and failure logs are written to standard error (`stderr`). The tool continues processing subsequent files in the list even if a prior file fails to process.
 
 ## Project Structure
 
@@ -95,7 +99,6 @@ DSSP-Pre/
 
 ## Notes
 
-- It’s recommended to keep a backup of your original PDB file before running the tool, as it overwrites the input file.
 - Adjust compilation flags in the `makefile` if you need different optimization settings or broader compatibility.
 
 ## To-Do
