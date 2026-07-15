@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <libgen.h>
 #include "process_pdb.h"
 
 // Default PDB records - must maintain exact spacing
@@ -156,6 +157,59 @@ void insert_cryst1(char **lines, int *nlines) {
             (*nlines)++;
         }
     }
+}
+
+bool process_file(const char *input_path, const char *output_dir) {
+    FILE *fp = fopen(input_path, "r");
+    if (!fp) {
+        perror(input_path);
+        return false;
+    }
+
+    char *lines[MAX_LINES];
+    int nlines = 0;
+    char buffer[MAX_LINE_LEN];
+
+    while (fgets(buffer, sizeof(buffer), fp)) {
+        if (nlines >= MAX_LINES) {
+            fprintf(stderr, "Error: File %s too large to process\n", input_path);
+            fclose(fp);
+            for (int i = 0; i < nlines; i++) free(lines[i]);
+            return false;
+        }
+        lines[nlines++] = strdup(buffer);
+    }
+    fclose(fp);
+
+    fix_header_and_model(lines, &nlines);
+    insert_cryst1(lines, &nlines);
+
+    char output_path[MAX_LINE_LEN * 2];
+    if (output_dir == NULL) {
+        strncpy(output_path, input_path, sizeof(output_path) - 1);
+        output_path[sizeof(output_path) - 1] = '\0';
+    } else {
+        // Extract basename securely
+        char temp_path[MAX_LINE_LEN];
+        strncpy(temp_path, input_path, sizeof(temp_path) - 1);
+        temp_path[sizeof(temp_path) - 1] = '\0';
+        char *base = basename(temp_path);
+        snprintf(output_path, sizeof(output_path), "%s/%s", output_dir, base);
+    }
+
+    fp = fopen(output_path, "w");
+    if (!fp) {
+        perror(output_path);
+        for (int i = 0; i < nlines; i++) free(lines[i]);
+        return false;
+    }
+
+    for (int i = 0; i < nlines; i++) {
+        fputs(lines[i], fp);
+        free(lines[i]);
+    }
+    fclose(fp);
+    return true;
 }
 
 int main(int argc, char **argv) {
